@@ -55,20 +55,15 @@ const createMenu = () => {
     },
     {
       label: 'Помощь',
-      submenu: [{ label: 'О приложении', click: () => {
-        // Dialog будет добавлен позже
-      } }],
+      submenu: [
+        { label: 'Инструменты разработчика (F12)', accelerator: 'F12', role: 'toggleDevTools' },
+        { type: 'separator' },
+        { label: 'О приложении', click: () => {
+          // Dialog будет добавлен позже
+        } },
+      ],
     },
   ];
-
-  if (isDev) {
-    template.push({
-      label: 'Разработка',
-      submenu: [
-        { label: 'Инструменты разработчика', accelerator: 'F12', role: 'toggleDevTools' },
-      ],
-    });
-  }
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 };
