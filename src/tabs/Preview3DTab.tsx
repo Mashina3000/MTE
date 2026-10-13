@@ -3,7 +3,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { ContactShadows, Environment, Float, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { TabLayout } from '@/components/TabLayout';
-import { Cube, Camera, Sparkles, Download, RotateCcw } from 'lucide-react';
+import { Box, Camera, Sparkles, Download, RotateCcw } from 'lucide-react';
 
 type CameraPreset =
   | 'front'
@@ -302,7 +302,7 @@ export const Preview3DTab: React.FC = () => {
   };
 
   return (
-    <TabLayout label="3D Preview" id={3} icon={<Cube />}>
+    <TabLayout label="3D Preview" id={3} icon={<Box />}>
       <div className="flex h-full gap-4">
         <aside className="w-72 bg-gray-900 rounded border border-gray-700 p-3 overflow-y-auto">
           <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-200">

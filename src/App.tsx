@@ -19,7 +19,7 @@ import {
   Edit3,
   Play,
   Package,
-  Cube,
+  Box,
   FileText,
   Settings,
   Zap,
@@ -71,7 +71,7 @@ export const App: React.FC = () => {
     {
       id: 3,
       label: t('tabs.preview3d'),
-      icon: <Cube size={20} />,
+      icon: <Box size={20} />,
       component: <Preview3DTab />,
     },
     {
