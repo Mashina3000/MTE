@@ -85,6 +85,7 @@
       "main": "dist-electron/main.js"
     },
     "win": {
+      "icon": "electron/icon.ico",
       "target": [
         {
           "target": "nsis",

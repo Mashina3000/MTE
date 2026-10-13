@@ -82,49 +82,6 @@ export const applySavedSettingsAppearance = () => {
     body.dataset.appTheme = preferences.theme;
     body.style.fontSize = `${preferences.uiSize}px`;
   }
-
-  let style = document.getElementById('minecraft-editor-settings-theme') as HTMLStyleElement | null;
-  if (!style && document.head) {
-    style = document.createElement('style');
-    style.id = 'minecraft-editor-settings-theme';
-    document.head.appendChild(style);
-  }
-  if (!style) return;
-
-  style.textContent = `
-    [data-app-theme="light"] body { background: #f3f4f6; color: #111827; }
-    [data-app-theme="light"] .bg-gray-900 { background-color: #e5e7eb !important; }
-    [data-app-theme="light"] .bg-gray-800 { background-color: #f9fafb !important; }
-    [data-app-theme="light"] .bg-gray-700 { background-color: #d1d5db !important; }
-    [data-app-theme="light"] .text-white { color: #111827 !important; }
-    [data-app-theme="light"] .text-gray-100,
-    [data-app-theme="light"] .text-gray-200,
-    [data-app-theme="light"] .text-gray-300 { color: #1f2937 !important; }
-    [data-app-theme="light"] .text-gray-400,
-    [data-app-theme="light"] .text-gray-500 { color: #4b5563 !important; }
-    [data-app-theme="light"] .border-gray-700,
-    [data-app-theme="light"] .border-gray-600 { border-color: #cbd5e1 !important; }
-    [data-app-theme="light"] input,
-    [data-app-theme="light"] textarea,
-    [data-app-theme="light"] select { color: #111827; }
-    @media (prefers-color-scheme: light) {
-      [data-app-theme="auto"] body { background: #f3f4f6; color: #111827; }
-      [data-app-theme="auto"] .bg-gray-900 { background-color: #e5e7eb !important; }
-      [data-app-theme="auto"] .bg-gray-800 { background-color: #f9fafb !important; }
-      [data-app-theme="auto"] .bg-gray-700 { background-color: #d1d5db !important; }
-      [data-app-theme="auto"] .text-white { color: #111827 !important; }
-      [data-app-theme="auto"] .text-gray-100,
-      [data-app-theme="auto"] .text-gray-200,
-      [data-app-theme="auto"] .text-gray-300 { color: #1f2937 !important; }
-      [data-app-theme="auto"] .text-gray-400,
-      [data-app-theme="auto"] .text-gray-500 { color: #4b5563 !important; }
-      [data-app-theme="auto"] .border-gray-700,
-      [data-app-theme="auto"] .border-gray-600 { border-color: #cbd5e1 !important; }
-      [data-app-theme="auto"] input,
-      [data-app-theme="auto"] textarea,
-      [data-app-theme="auto"] select { color: #111827; }
-    }
-  `;
 };
 
 const fieldClass =
@@ -274,11 +231,11 @@ export const SettingsTab: React.FC = () => {
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
             <label>
-              <span className={labelClass}>Theme</span>
+              <span className={labelClass}>{preferences.language === 'ru' ? 'Тема интерфейса' : 'Theme'}</span>
               <select className={fieldClass} value={preferences.theme} onChange={(event) => update('theme', event.target.value as Theme)}>
-                <option value="dark">Dark</option>
-                <option value="light">Light</option>
-                <option value="auto">Follow system</option>
+                <option value="dark">{preferences.language === 'ru' ? 'Тёмная' : 'Dark'}</option>
+                <option value="light">{preferences.language === 'ru' ? 'Светлая' : 'Light'}</option>
+                <option value="auto">{preferences.language === 'ru' ? 'Как в системе' : 'Follow system'}</option>
               </select>
             </label>
             <label>

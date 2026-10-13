@@ -1,360 +1,453 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { Stage, Layer as KonvaLayer, Image } from 'react-konva';
+import React, { useRef, useState } from 'react';
+import { Group, Image as KonvaImage, Layer as KonvaLayer, Line, Rect, Stage } from 'react-konva';
 import Konva from 'konva';
 import { useStore } from '@/store';
 import { TabLayout } from '@/components/TabLayout';
 import { useTranslation } from '@/locales/i18n';
 import {
-  Palette,
-  Edit3,
-  Trash2,
   Copy,
   Download,
-  Upload,
-  Maximize2,
+  Eraser,
+  Eye,
+  EyeOff,
   Grid3x3,
-  Undo2,
+  Layers,
+  Minus,
+  Palette,
+  Plus,
   Redo2,
+  Trash2,
+  Undo2,
+  Upload,
 } from 'lucide-react';
+
+interface DrawingLayer {
+  id: string;
+  name: string;
+  visible: boolean;
+  opacity: number;
+}
+
+interface Stroke {
+  id: string;
+  layerId: string;
+  points: number[];
+  color: string;
+  width: number;
+  tool: 'brush' | 'eraser';
+  cap: 'round' | 'square';
+  opacity: number;
+}
+
+const INITIAL_LAYER_ID = 'layer-1';
 
 export const TextureEditorTab: React.FC = () => {
   const { t } = useTranslation();
-  const store = useStore();
+  const currentTool = useStore((state) => state.currentTool);
+  const brushSize = useStore((state) => state.brushSize);
+  const brushShape = useStore((state) => state.brushShape);
+  const brushHardness = useStore((state) => state.brushHardness);
+  const gridVisible = useStore((state) => state.gridVisible);
+  const setCurrentTool = useStore((state) => state.setCurrentTool);
+  const setBrushSize = useStore((state) => state.setBrushSize);
+  const setBrushShape = useStore((state) => state.setBrushShape);
+  const setBrushHardness = useStore((state) => state.setBrushHardness);
+  const toggleGridVisible = useStore((state) => state.toggleGridVisible);
+
   const stageRef = useRef<Konva.Stage | null>(null);
+  const drawingRef = useRef(false);
   const [canvasWidth, setCanvasWidth] = useState(256);
   const [canvasHeight, setCanvasHeight] = useState(256);
-  const [layers, setLayers] = useState([
-    { id: 'layer-1', name: 'Layer 1', visible: true, locked: false, opacity: 1 },
+  const [layers, setLayers] = useState<DrawingLayer[]>([
+    { id: INITIAL_LAYER_ID, name: 'Слой 1', visible: true, opacity: 1 },
   ]);
-  const [selectedColor, setSelectedColor] = useState('#FF0000');
-  const [history, setHistory] = useState<string[]>([]);
-  const [historyStep, setHistoryStep] = useState(-1);
+  const [activeLayerId, setActiveLayerId] = useState(INITIAL_LAYER_ID);
+  const [strokes, setStrokes] = useState<Stroke[]>([]);
+  const [redoStrokes, setRedoStrokes] = useState<Stroke[]>([]);
+  const [selectedColor, setSelectedColor] = useState('#39B56B');
+  const [backgroundColor, setBackgroundColor] = useState<string | null>(null);
+  const [importedImage, setImportedImage] = useState<HTMLImageElement | null>(null);
+  const [status, setStatus] = useState('Готово к рисованию');
 
-  // Рисование на холсте
-  const handleCanvasDraw = (e: Konva.KonvaEventObject<PointerEvent>) => {
-    if (store.currentTool !== 'brush') return;
-    
-    const stage = stageRef.current;
-    if (!stage) return;
+  const zoom = Math.max(1, Math.min(4, 520 / Math.max(canvasWidth, canvasHeight)));
+  const stageWidth = Math.round(canvasWidth * zoom);
+  const stageHeight = Math.round(canvasHeight * zoom);
+  const selectedLayer = layers.find((layer) => layer.id === activeLayerId);
 
-    const pos = stage.getPointerPosition();
-    if (!pos) return;
-
-    const layer = stage.findOne('.drawing-layer') as Konva.Layer;
-    if (!layer) return;
-
-    const ctx = layer.getContext() as CanvasRenderingContext2D;
-    ctx.fillStyle = selectedColor;
-    ctx.beginPath();
-    ctx.arc(pos.x, pos.y, store.brushSize, 0, Math.PI * 2);
-    ctx.fill();
+  const getCanvasPoint = () => {
+    const point = stageRef.current?.getPointerPosition();
+    if (!point) return null;
+    return { x: point.x / zoom, y: point.y / zoom };
   };
 
-  // Создать новый слой
+  const startDrawing = () => {
+    const point = getCanvasPoint();
+    if (!point || !selectedLayer?.visible) return;
+
+    if (currentTool === 'fill') {
+      setBackgroundColor(selectedColor);
+      setStatus('Заливка применена');
+      return;
+    }
+    if (currentTool === 'eyedropper') {
+      const context = stageRef.current?.toCanvas().getContext('2d');
+      if (!context) {
+        setStatus('Не удалось прочитать цвет с холста');
+        return;
+      }
+      const pixel = context.getImageData(
+        Math.max(0, Math.min(stageWidth - 1, Math.floor(point.x * zoom))),
+        Math.max(0, Math.min(stageHeight - 1, Math.floor(point.y * zoom))),
+        1,
+        1
+      ).data;
+      if (pixel[3] === 0) {
+        setStatus('В этой точке прозрачный пиксель');
+        return;
+      }
+      setSelectedColor(`#${Array.from(pixel.slice(0, 3), (value) => value.toString(16).padStart(2, '0')).join('')}`);
+      setStatus('Цвет выбран пипеткой');
+      return;
+    }
+    if (currentTool !== 'brush' && currentTool !== 'eraser') return;
+
+    drawingRef.current = true;
+    setRedoStrokes([]);
+    setStrokes((current) => [
+      ...current,
+      {
+        id: `stroke-${Date.now()}-${current.length}`,
+        layerId: activeLayerId,
+        points: [point.x, point.y, point.x, point.y],
+        color: selectedColor,
+        width: brushSize,
+        tool: currentTool,
+        cap: brushShape === 'square' ? 'square' : 'round',
+        opacity: brushHardness / 100,
+      },
+    ]);
+  };
+
+  const continueDrawing = () => {
+    if (!drawingRef.current) return;
+    const point = getCanvasPoint();
+    if (!point) return;
+    setStrokes((current) => {
+      const lastStroke = current[current.length - 1];
+      if (!lastStroke || lastStroke.layerId !== activeLayerId) return current;
+      const updated = [...current];
+      updated[updated.length - 1] = {
+        ...lastStroke,
+        points: [...lastStroke.points, point.x, point.y],
+      };
+      return updated;
+    });
+  };
+
+  const stopDrawing = () => {
+    drawingRef.current = false;
+  };
+
   const createLayer = () => {
-    const newLayer = {
+    const layer = {
       id: `layer-${Date.now()}`,
-      name: `Layer ${layers.length + 1}`,
+      name: `Слой ${layers.length + 1}`,
       visible: true,
-      locked: false,
       opacity: 1,
     };
-    setLayers([newLayer, ...layers]);
+    setLayers((current) => [...current, layer]);
+    setActiveLayerId(layer.id);
   };
 
-  // Дублировать слой
   const duplicateLayer = (layerId: string) => {
-    const layer = layers.find((l) => l.id === layerId);
-    if (!layer) return;
-    const newLayer = { ...layer, id: `layer-${Date.now()}` };
-    setLayers([newLayer, ...layers]);
+    const source = layers.find((layer) => layer.id === layerId);
+    if (!source) return;
+    const id = `layer-${Date.now()}`;
+    setLayers((current) => [...current, { ...source, id, name: `${source.name} копия` }]);
+    setStrokes((current) => [
+      ...current,
+      ...current.filter((stroke) => stroke.layerId === layerId).map((stroke) => ({
+        ...stroke,
+        id: `${stroke.id}-copy-${id}`,
+        layerId: id,
+      })),
+    ]);
+    setActiveLayerId(id);
   };
 
-  // Удалить слой
   const deleteLayer = (layerId: string) => {
-    if (layers.length === 1) return;
-    setLayers(layers.filter((l) => l.id !== layerId));
+    if (layers.length <= 1) return;
+    const nextLayers = layers.filter((layer) => layer.id !== layerId);
+    setLayers(nextLayers);
+    setStrokes((current) => current.filter((stroke) => stroke.layerId !== layerId));
+    if (activeLayerId === layerId) setActiveLayerId(nextLayers[0].id);
   };
 
-  // Экспортировать как PNG
-  const exportAsPNG = () => {
-    const stage = stageRef.current;
-    if (!stage) return;
-    
-    const uri = stage.toDataURL();
-    const link = document.createElement('a');
-    link.href = uri;
-    link.download = `texture-${Date.now()}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const undo = () => {
+    const lastStroke = strokes[strokes.length - 1];
+    if (!lastStroke) return;
+    setStrokes((current) => current.slice(0, -1));
+    setRedoStrokes((current) => [...current, lastStroke]);
   };
 
-  // Импортировать изображение
-  const handleImportImage = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const redo = () => {
+    const lastRedo = redoStrokes[redoStrokes.length - 1];
+    if (!lastRedo) return;
+    setRedoStrokes((current) => current.slice(0, -1));
+    setStrokes((current) => [...current, lastRedo]);
+  };
+
+  const importImage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        setCanvasWidth(img.width);
-        setCanvasHeight(img.height);
+    reader.onerror = () => setStatus('Не удалось прочитать файл изображения');
+    reader.onload = () => {
+      if (typeof reader.result !== 'string') {
+        setStatus('Не удалось прочитать файл изображения');
+        return;
+      }
+      const image = new window.Image();
+      image.onload = () => {
+        if (image.width > 4096 || image.height > 4096) {
+          setStatus('Размер изображения не должен превышать 4096 × 4096');
+          return;
+        }
+        setImportedImage(image);
+        setCanvasWidth(image.width);
+        setCanvasHeight(image.height);
+        setStatus(`Загружено изображение ${image.width} × ${image.height}`);
       };
-      img.src = event.target?.result as string;
+      image.onerror = () => setStatus('Файл не удалось открыть как изображение');
+      image.src = reader.result;
     };
     reader.readAsDataURL(file);
   };
 
-  // Пресеты размеров
+  const exportAsPNG = () => {
+    const stage = stageRef.current;
+    if (!stage) {
+      setStatus('Холст ещё не готов');
+      return;
+    }
+    const link = document.createElement('a');
+    link.href = stage.toDataURL({ pixelRatio: 1 / zoom });
+    link.download = `texture-${canvasWidth}x${canvasHeight}.png`;
+    link.click();
+    setStatus('Текстура сохранена в PNG');
+  };
+
   const setPresetSize = (size: number) => {
     setCanvasWidth(size);
     setCanvasHeight(size);
+    setImportedImage(null);
+    setBackgroundColor(null);
+    setStrokes([]);
+    setRedoStrokes([]);
+    setStatus(`Создан холст ${size} × ${size}`);
   };
 
   return (
-    <TabLayout label={t('tabs.editor')} id={0} icon={<Edit3 />}>
-      <div className="flex gap-4 h-full">
-        {/* Левая панель - инструменты */}
-        <div className="w-64 bg-gray-900 p-4 rounded border border-gray-700 flex flex-col gap-4">
-          {/* Выбор инструмента */}
-          <div>
-            <label className="block text-sm font-semibold mb-2 text-gray-200">
-              {t('tools.brush')}
-            </label>
-            <select
-              value={store.currentTool}
-              onChange={(e) => store.setCurrentTool(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 text-white rounded focus:border-blue-500"
-            >
-              <option value="brush">{t('tools.brush')}</option>
-              <option value="eraser">{t('tools.eraser')}</option>
-              <option value="fill">{t('tools.fill')}</option>
-              <option value="eyedropper">{t('tools.eyedropper')}</option>
-            </select>
+    <TabLayout label={t('tabs.editor')} id={0} icon={<Palette size={18} />}>
+      <div className="texture-workspace">
+        <aside className="texture-panel texture-tools">
+          <div className="texture-panel-heading">
+            <span className="texture-panel-icon"><Palette size={16} /></span>
+            <div>
+              <h3>Инструменты</h3>
+              <p>Холст и кисть</p>
+            </div>
           </div>
 
-          {/* Размер кисти */}
-          <div>
-            <label className="block text-sm font-semibold mb-2 text-gray-200">
-              Size: {store.brushSize}
-            </label>
-            <input
-              type="range"
-              min="1"
-              max="64"
-              value={store.brushSize}
-              onChange={(e) => store.setBrushSize(Number(e.target.value))}
-              className="w-full"
-            />
+          <label className="texture-field-label" htmlFor="texture-tool">Инструмент</label>
+          <select
+            id="texture-tool"
+            value={currentTool}
+            onChange={(event) => setCurrentTool(event.target.value)}
+            className="texture-select"
+          >
+            <option value="brush">{t('tools.brush')}</option>
+            <option value="eraser">{t('tools.eraser')}</option>
+            <option value="fill">{t('tools.fill')}</option>
+            <option value="eyedropper">{t('tools.eyedropper')}</option>
+          </select>
+
+          <div className="texture-control">
+            <label className="texture-field-label" htmlFor="brush-size">Размер кисти <span>{brushSize}px</span></label>
+            <input id="brush-size" type="range" min="1" max="64" value={brushSize} onChange={(event) => setBrushSize(Number(event.target.value))} />
+          </div>
+          <div className="texture-control">
+            <label className="texture-field-label" htmlFor="brush-hardness">Жёсткость <span>{brushHardness}%</span></label>
+            <input id="brush-hardness" type="range" min="1" max="100" value={brushHardness} onChange={(event) => setBrushHardness(Number(event.target.value))} />
           </div>
 
-          {/* Жёсткость кисти */}
           <div>
-            <label className="block text-sm font-semibold mb-2 text-gray-200">
-              Hardness: {store.brushHardness}%
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={store.brushHardness}
-              onChange={(e) => store.setBrushHardness(Number(e.target.value))}
-              className="w-full"
-            />
-          </div>
-
-          {/* Форма кисти */}
-          <div>
-            <label className="block text-sm font-semibold mb-2 text-gray-200">Shape</label>
-            <div className="flex gap-2">
+            <span className="texture-field-label">Форма кисти</span>
+            <div className="texture-shape-options">
               {(['square', 'circle', 'diamond'] as const).map((shape) => (
                 <button
                   key={shape}
-                  onClick={() => store.setBrushShape(shape)}
-                  className={`flex-1 px-2 py-2 rounded border text-xs font-semibold capitalize ${
-                    store.brushShape === shape
-                      ? 'bg-blue-600 border-blue-500 text-white'
-                      : 'bg-gray-800 border-gray-600 text-gray-300 hover:border-gray-500'
-                  }`}
+                  type="button"
+                  onClick={() => setBrushShape(shape)}
+                  className={`texture-shape-button ${brushShape === shape ? 'is-selected' : ''}`}
+                  aria-pressed={brushShape === shape}
                 >
-                  {shape}
+                  {shape === 'square' ? 'Квадрат' : shape === 'circle' ? 'Круг' : 'Ромб'}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Цвет */}
-          <div>
-            <label className="block text-sm font-semibold mb-2 text-gray-200">
-              <Palette className="inline mr-2" size={16} />
-              Color
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="color"
-                value={selectedColor}
-                onChange={(e) => setSelectedColor(e.target.value)}
-                className="w-12 h-10 rounded cursor-pointer"
-              />
-              <input
-                type="text"
-                value={selectedColor}
-                onChange={(e) => setSelectedColor(e.target.value)}
-                className="flex-1 px-2 py-1 bg-gray-800 border border-gray-600 text-white rounded text-xs"
-              />
+          <div className="texture-control">
+            <label className="texture-field-label" htmlFor="texture-color">Цвет кисти</label>
+            <div className="texture-color-control">
+              <input id="texture-color" type="color" value={selectedColor} onChange={(event) => setSelectedColor(event.target.value)} />
+              <span>{selectedColor.toUpperCase()}</span>
             </div>
           </div>
 
-          {/* Симметрия */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => store.toggleSymmetryX()}
-              className={`flex-1 px-2 py-2 rounded text-xs font-semibold ${
-                store.isSymmetryX
-                  ? 'bg-blue-600 border-blue-500 text-white'
-                  : 'bg-gray-800 border border-gray-600 text-gray-300 hover:border-gray-500'
-              }`}
-            >
-              Symmetry X
-            </button>
-            <button
-              onClick={() => store.toggleSymmetryY()}
-              className={`flex-1 px-2 py-2 rounded text-xs font-semibold ${
-                store.isSymmetryY
-                  ? 'bg-blue-600 border-blue-500 text-white'
-                  : 'bg-gray-800 border border-gray-600 text-gray-300 hover:border-gray-500'
-              }`}
-            >
-              Symmetry Y
-            </button>
-          </div>
-
-          {/* Сетка */}
-          <button
-            onClick={() => store.toggleGridVisible()}
-            className={`w-full px-3 py-2 rounded font-semibold flex items-center justify-center gap-2 ${
-              store.gridVisible
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-            }`}
-          >
-            <Grid3x3 size={16} />
-            Grid
-          </button>
-
-          {/* Пресеты размеров */}
+          <div className="texture-separator" />
           <div>
-            <label className="block text-sm font-semibold mb-2 text-gray-200">Preset Size</label>
-            <div className="grid grid-cols-2 gap-2">
+            <span className="texture-field-label">Размер текстуры</span>
+            <div className="texture-size-options">
               {[16, 32, 64, 128, 256, 512].map((size) => (
                 <button
                   key={size}
+                  type="button"
                   onClick={() => setPresetSize(size)}
-                  className={`px-2 py-2 rounded text-xs font-semibold ${
-                    canvasWidth === size && canvasHeight === size
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                  }`}
+                  className={`texture-size-button ${canvasWidth === size && canvasHeight === size ? 'is-selected' : ''}`}
                 >
                   {size}
                 </button>
               ))}
             </div>
           </div>
+          <p className="texture-hint"><Eraser size={14} /> PNG сохраняется с прозрачностью</p>
+        </aside>
 
-          {/* Действия */}
-          <div className="flex gap-2">
-            <button className="flex-1 px-2 py-2 bg-gray-800 text-gray-300 hover:bg-gray-700 rounded text-xs font-semibold flex items-center justify-center gap-1">
-              <Undo2 size={14} /> Undo
-            </button>
-            <button className="flex-1 px-2 py-2 bg-gray-800 text-gray-300 hover:bg-gray-700 rounded text-xs font-semibold flex items-center justify-center gap-1">
-              <Redo2 size={14} /> Redo
-            </button>
+        <section className="texture-canvas-panel">
+          <div className="texture-canvas-toolbar">
+            <div>
+              <strong>Холст</strong>
+              <span>{canvasWidth} × {canvasHeight} px</span>
+            </div>
+            <div className="texture-toolbar-actions">
+              <button type="button" onClick={undo} disabled={strokes.length === 0} title="Отменить" aria-label="Отменить"><Undo2 size={16} /></button>
+              <button type="button" onClick={redo} disabled={redoStrokes.length === 0} title="Повторить" aria-label="Повторить"><Redo2 size={16} /></button>
+              <button type="button" onClick={toggleGridVisible} className={gridVisible ? 'is-active' : ''} title="Сетка" aria-label="Переключить сетку"><Grid3x3 size={16} /></button>
+            </div>
           </div>
-        </div>
+          <div className="texture-canvas-area">
+            <div className="texture-canvas-frame" style={{ width: stageWidth, height: stageHeight }}>
+              <Stage
+                ref={stageRef}
+                width={stageWidth}
+                height={stageHeight}
+                onPointerDown={startDrawing}
+                onPointerMove={continueDrawing}
+                onPointerUp={stopDrawing}
+                onPointerLeave={stopDrawing}
+                className="texture-stage"
+              >
+                <KonvaLayer>
+                  <Group scaleX={zoom} scaleY={zoom}>
+                    {backgroundColor && <Rect width={canvasWidth} height={canvasHeight} fill={backgroundColor} />}
+                    {importedImage && <KonvaImage image={importedImage} width={canvasWidth} height={canvasHeight} />}
+                    {layers.map((layer) => (
+                      <Group key={layer.id} visible={layer.visible} opacity={layer.opacity}>
+                        {strokes.filter((stroke) => stroke.layerId === layer.id).map((stroke) => (
+                          <Line
+                            key={stroke.id}
+                            points={stroke.points}
+                            stroke={stroke.tool === 'eraser' ? '#000000' : stroke.color}
+                            strokeWidth={stroke.width}
+                            lineCap={stroke.cap}
+                            lineJoin={stroke.cap === 'square' ? 'miter' : 'round'}
+                            opacity={stroke.opacity}
+                            globalCompositeOperation={stroke.tool === 'eraser' ? 'destination-out' : 'source-over'}
+                          />
+                        ))}
+                      </Group>
+                    ))}
+                    {gridVisible && Array.from({ length: Math.floor(canvasWidth / 16) + 1 }, (_, index) => (
+                      <React.Fragment key={`grid-${index}`}>
+                        <Line points={[index * 16, 0, index * 16, canvasHeight]} stroke="#6b7280" strokeWidth={0.5} opacity={0.35} listening={false} />
+                      </React.Fragment>
+                    ))}
+                    {gridVisible && Array.from({ length: Math.floor(canvasHeight / 16) + 1 }, (_, index) => (
+                      <Line key={`grid-row-${index}`} points={[0, index * 16, canvasWidth, index * 16]} stroke="#6b7280" strokeWidth={0.5} opacity={0.35} listening={false} />
+                    ))}
+                  </Group>
+                </KonvaLayer>
+              </Stage>
+            </div>
+          </div>
+          <div className="texture-canvas-footer">
+            <span><i className="texture-status-dot" />{status}</span>
+            <span>Инструмент: {currentTool === 'brush' ? 'кисть' : currentTool}</span>
+          </div>
+        </section>
 
-        {/* Центральная панель - холст */}
-        <div className="flex-1 flex flex-col bg-gray-900 p-4 rounded border border-gray-700">
-          <div className="flex-1 overflow-auto bg-gray-950 rounded border border-gray-700">
-            <Stage
-              ref={stageRef}
-              width={canvasWidth}
-              height={canvasHeight}
-              onMouseMove={handleCanvasDraw}
-              className="cursor-crosshair"
-            >
-              <KonvaLayer className="drawing-layer">
-                {/* Холст рисования будет здесь */}
-              </KonvaLayer>
-            </Stage>
+        <aside className="texture-panel texture-layers">
+          <div className="texture-panel-heading">
+            <span className="texture-panel-icon"><Layers size={16} /></span>
+            <div>
+              <h3>Слои</h3>
+              <p>{layers.length} в документе</p>
+            </div>
+            <button type="button" className="texture-icon-button" onClick={createLayer} title="Добавить слой" aria-label="Добавить слой"><Plus size={16} /></button>
           </div>
-          <div className="mt-4 flex gap-2">
-            <label className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer">
-              <Upload size={16} />
-              {t('actions.import')}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImportImage}
-                className="hidden"
-              />
-            </label>
-            <button
-              onClick={exportAsPNG}
-              className="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded font-semibold text-sm flex items-center justify-center gap-2"
-            >
-              <Download size={16} />
-              {t('actions.export')}
-            </button>
-          </div>
-        </div>
-
-        {/* Правая панель - слои */}
-        <div className="w-48 bg-gray-900 p-4 rounded border border-gray-700 flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-gray-200">Layers</h3>
-            <button
-              onClick={createLayer}
-              className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold"
-            >
-              +
-            </button>
-          </div>
-          <div className="flex-1 overflow-auto space-y-2">
-            {layers.map((layer) => (
-              <div key={layer.id} className="p-2 bg-gray-800 rounded border border-gray-700 text-xs">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-gray-200 font-semibold">{layer.name}</span>
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => duplicateLayer(layer.id)}
-                      className="p-1 hover:bg-gray-700 rounded"
-                    >
-                      <Copy size={12} className="text-gray-400" />
-                    </button>
-                    <button
-                      onClick={() => deleteLayer(layer.id)}
-                      className="p-1 hover:bg-gray-700 rounded"
-                    >
-                      <Trash2 size={12} className="text-gray-400" />
-                    </button>
-                  </div>
+          <div className="texture-layer-list">
+            {[...layers].reverse().map((layer) => (
+              <div key={layer.id} className={`texture-layer-card ${activeLayerId === layer.id ? 'is-selected' : ''}`}>
+                <button type="button" className="texture-layer-select" onClick={() => setActiveLayerId(layer.id)}>
+                  <span className="texture-layer-thumb"><Layers size={15} /></span>
+                  <span>{layer.name}</span>
+                </button>
+                <button
+                  type="button"
+                  className="texture-layer-visibility"
+                  onClick={() => setLayers((current) => current.map((item) => item.id === layer.id ? { ...item, visible: !item.visible } : item))}
+                  title={layer.visible ? 'Скрыть слой' : 'Показать слой'}
+                  aria-label={layer.visible ? 'Скрыть слой' : 'Показать слой'}
+                >
+                  {layer.visible ? <Eye size={15} /> : <EyeOff size={15} />}
+                </button>
+                <div className="texture-layer-actions">
+                  <button type="button" onClick={() => duplicateLayer(layer.id)} title="Дублировать слой" aria-label="Дублировать слой"><Copy size={14} /></button>
+                  <button type="button" onClick={() => deleteLayer(layer.id)} disabled={layers.length <= 1} title="Удалить слой" aria-label="Удалить слой"><Trash2 size={14} /></button>
                 </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.1"
-                  value={layer.opacity}
-                  className="w-full"
-                  title="Opacity"
-                />
+                {activeLayerId === layer.id && (
+                  <label className="texture-layer-opacity">
+                    <Minus size={12} />
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.05"
+                      value={layer.opacity}
+                      onChange={(event) => setLayers((current) => current.map((item) => item.id === layer.id ? { ...item, opacity: Number(event.target.value) } : item))}
+                      aria-label="Непрозрачность слоя"
+                    />
+                    <Plus size={12} />
+                  </label>
+                )}
               </div>
             ))}
           </div>
-        </div>
+          <div className="texture-layer-bottom">
+            <label className="texture-secondary-action">
+              <Upload size={15} />
+              Импорт PNG
+              <input type="file" accept="image/png,image/jpeg,image/webp" onChange={importImage} />
+            </label>
+            <button type="button" className="texture-export-button" onClick={exportAsPNG}>
+              <Download size={16} /> Экспорт PNG
+            </button>
+          </div>
+        </aside>
       </div>
     </TabLayout>
   );

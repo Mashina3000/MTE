@@ -34,19 +34,22 @@ const MINECRAFT_VERSIONS: MinecraftVersion[] = [
 
 export const ResourcePackBuilderTab: React.FC = () => {
   const { t } = useTranslation();
-  const store = useStore();
-  const [packName, setPackName] = useState(store.packName);
+  const initialPackName = useStore((state) => state.packName);
+  const initialSelectedVersions = useStore((state) => state.selectedVersions);
+  const setPackNameInStore = useStore((state) => state.setPackName);
+  const setSelectedVersionsInStore = useStore((state) => state.setSelectedVersions);
+  const [packName, setPackName] = useState(initialPackName);
   const [packDescription, setPackDescription] = useState('A custom resource pack');
   const [packAuthor, setPackAuthor] = useState('Author');
   const [packVersion, setPackVersion] = useState('1.0.0');
-  const [selectedVersions, setSelectedVersions] = useState<string[]>(store.selectedVersions);
+  const [selectedVersions, setSelectedVersions] = useState<string[]>(initialSelectedVersions);
   const [templateType, setTemplateType] = useState('empty');
 
   // Обновить хранилище
   React.useEffect(() => {
-    store.setPackName(packName);
-    store.setSelectedVersions(selectedVersions);
-  }, [packName, selectedVersions, store]);
+    setPackNameInStore(packName);
+    setSelectedVersionsInStore(selectedVersions);
+  }, [packName, selectedVersions, setPackNameInStore, setSelectedVersionsInStore]);
 
   // Выбрать/отменить версию
   const toggleVersion = (versionId: string) => {

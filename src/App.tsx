@@ -159,29 +159,29 @@ export const App: React.FC = () => {
   }, [currentTab?.label]);
 
   return (
-    <div className="flex flex-col w-screen h-screen bg-gray-900">
-      {/* Заголовок */}
-      <header className="bg-gray-950 border-b border-gray-700 px-6 py-4 flex items-center justify-between">
+    <div className="app-shell flex flex-col w-screen h-screen">
+      <header className="app-shell-header flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="text-2xl font-bold text-blue-500">⛏️</div>
-          <h1 className="text-xl font-bold text-white">Minecraft Texture Editor</h1>
-          <span className="text-xs px-2 py-1 bg-blue-600 text-white rounded">Beta v0.1.0</span>
+          <div className="app-brand-mark"><Package size={20} /></div>
+          <div>
+            <h1 className="app-brand-title">Minecraft Texture Editor</h1>
+            <p className="app-brand-subtitle">PIXEL ART WORKSPACE</p>
+          </div>
+          <span className="app-version-badge">BETA 0.1.0</span>
         </div>
-        <div className="text-xs text-gray-400">
+        <div className="app-shortcut-hint">
           Ctrl+1...Ctrl+9 для переключения вкладок
         </div>
       </header>
 
-      {/* Вкладки */}
-      <div className="bg-gray-900 border-b border-gray-700 px-2 py-2 flex gap-1 overflow-x-auto">
+      <nav className="app-tabs flex gap-1 overflow-x-auto" aria-label="Разделы приложения">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded whitespace-nowrap font-semibold text-sm transition-all ${
-              activeTab === tab.id
-                ? 'bg-blue-600 text-white shadow-lg'
-                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+            aria-current={activeTab === tab.id ? 'page' : undefined}
+            className={`app-tab flex items-center gap-2 whitespace-nowrap transition-all ${
+              activeTab === tab.id ? 'app-tab-active' : ''
             }`}
           >
             {tab.icon}
@@ -193,7 +193,7 @@ export const App: React.FC = () => {
             )}
           </button>
         ))}
-      </div>
+      </nav>
 
       {/* Содержимое вкладки */}
       <main className="flex-1 overflow-hidden">
@@ -201,8 +201,8 @@ export const App: React.FC = () => {
       </main>
 
       {/* Статус бар */}
-      <footer className="bg-gray-950 border-t border-gray-700 px-6 py-2 flex items-center justify-between text-xs text-gray-400">
-        <div>Ready</div>
+      <footer className="app-shell-footer flex items-center justify-between">
+        <div><i className="texture-status-dot" /> Готово</div>
         <div>
           Current Tab: {currentTab?.label} ({activeTab + 1}/{tabs.length})
         </div>
