@@ -15,8 +15,8 @@
     "test:coverage": "vitest --coverage",
     "e2e": "playwright test",
     "type-check": "tsc --noEmit",
-    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && tsc electron/main.ts electron/preload.ts --outDir dist-electron --module commonjs --moduleResolution node && node scripts/copy-electron-package.cjs && electron .\"",
-    "electron:build": "npm run build && tsc electron/main.ts electron/preload.ts --outDir dist-electron --module commonjs --moduleResolution node && node scripts/copy-electron-package.cjs",
+    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && tsc electron/main.ts electron/preload.ts --outDir dist-electron --module commonjs --moduleResolution node --esModuleInterop --skipLibCheck && node scripts/copy-electron-package.cjs && electron .\"",
+    "electron:build": "npm run build && tsc electron/main.ts electron/preload.ts --outDir dist-electron --module commonjs --moduleResolution node --esModuleInterop --skipLibCheck && node scripts/copy-electron-package.cjs",
     "electron:build:win": "npm run electron:build && electron-builder --win",
     "dist:exe": "npm run electron:build:win"
   },
