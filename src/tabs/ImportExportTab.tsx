@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from '@/locales/i18n';
 import { del, get, set } from 'idb-keyval';
 import JSZip from 'jszip';
-import { Archive, CheckCircle2, CircleAlert, Download, FileArchive, Pause, Play, ShieldCheck, Trash2, Upload } from 'lucide-react';
+import { AlertCircle, Archive, CheckCircle2, Download, FileArchive, Pause, Play, ShieldCheck, Trash2, Upload } from 'lucide-react';
 import { TabLayout } from '@/components/TabLayout';
 
 type QueueStatus = 'saving' | 'queued' | 'inspecting' | 'paused' | 'ready' | 'error';
@@ -331,7 +331,7 @@ export const ImportExportTab: React.FC = () => {
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        {item.status === 'ready' ? <CheckCircle2 size={17} className="text-green-400" /> : item.status === 'error' ? <CircleAlert size={17} className="text-red-400" /> : <FileArchive size={17} className="text-blue-400" />}
+                        {item.status === 'ready' ? <CheckCircle2 size={17} className="text-green-400" /> : item.status === 'error' ? <AlertCircle size={17} className="text-red-400" /> : <FileArchive size={17} className="text-blue-400" />}
                         <h4 className="break-all font-medium text-gray-100">{item.name}</h4>
                         <span className="rounded bg-gray-700 px-2 py-0.5 text-xs text-gray-300">{item.type}</span>
                         <span className={`text-xs ${item.status === 'error' ? 'text-red-300' : item.status === 'ready' ? 'text-green-300' : 'text-gray-400'}`}>{statusLabel[item.status]}</span>
