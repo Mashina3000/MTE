@@ -5,7 +5,7 @@ import {
   Lightbulb,
   RefreshCw,
   Sparkles,
-  WandSparkles,
+  Wand2,
 } from 'lucide-react';
 import { TabLayout } from '@/components/TabLayout';
 
@@ -206,7 +206,7 @@ export const AIAssistantTab: React.FC = () => {
                 onClick={() => { setImageUrl(null); setSeed((value) => value + 1); setMessage('Создан новый вариант узора.'); }}
                 className="flex w-full items-center justify-center gap-2 rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500"
               >
-                <WandSparkles className="h-4 w-4" /> Новый вариант
+                <Wand2 className="h-4 w-4" /> Новый вариант
               </button>
               <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-gray-700 px-3 py-2 text-sm text-gray-200 hover:bg-gray-800">
                 <ImagePlus className="h-4 w-4" /> Уменьшить своё изображение
