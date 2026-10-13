@@ -31,7 +31,7 @@ jobs:
         run: npm run dist:exe
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: windows-exe
           path: dist/*.exe
