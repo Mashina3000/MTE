@@ -1445,9 +1445,41 @@ html[data-app-theme='light'] .border-gray-600 {
   box-shadow: inset 2px 2px #ffffff2b, inset -2px -2px #0003;
 }
 
+#root [class~='bg-green-600'],
+#root [class~='bg-green-700'] {
+  background-color: var(--app-accent-strong) !important;
+  box-shadow: inset 2px 2px #ffffff24, inset -2px -2px #0004;
+}
+
+#root [class~='bg-amber-950'],
+#root [class~='bg-yellow-950'] {
+  background-color: color-mix(in srgb, var(--app-gold) 20%, var(--app-panel)) !important;
+}
+
+#root [class~='border-amber-700'],
+#root [class~='border-yellow-700'] {
+  border-color: color-mix(in srgb, var(--app-gold) 60%, var(--app-border)) !important;
+}
+
+#root [class~='bg-red-600'],
+#root [class~='bg-red-700'] {
+  border: 1px solid #ffb7a4;
+  box-shadow: inset 2px 2px #ffffff30, inset -2px -2px #0004;
+}
+
 #root [class~='hover:bg-blue-700']:hover,
 #root [class~='hover:bg-blue-500']:hover {
   background-color: var(--app-accent-strong) !important;
+}
+
+#root [class~='hover:bg-green-700']:hover,
+#root [class~='hover:bg-green-800']:hover {
+  filter: brightness(1.13);
+}
+
+#root [class~='hover:bg-gray-700']:hover,
+#root [class~='hover:bg-gray-800']:hover {
+  background-color: var(--app-panel-hover) !important;
 }
 
 #root [class~='text-blue-500'],
@@ -1455,8 +1487,39 @@ html[data-app-theme='light'] .border-gray-600 {
   color: var(--app-accent) !important;
 }
 
+#root [class~='text-amber-200'],
+#root [class~='text-yellow-300'] {
+  color: var(--app-gold) !important;
+}
+
 #root [class~='border-blue-500'] {
   border-color: var(--app-accent) !important;
+}
+
+#root [class~='divide-gray-700'] > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--app-border) !important;
+}
+
+#root [class*='shadow'] {
+  --tw-shadow-color: #0004;
+}
+
+#root button:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: inset 2px 2px #0003;
+}
+
+#root button:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.45);
+}
+
+#root a {
+  color: var(--app-accent);
+}
+
+#root a:hover {
+  color: var(--app-gold);
 }
 
 ::-webkit-scrollbar-track {
@@ -1495,5 +1558,20 @@ html[data-app-theme='light'] .border-gray-600 {
     padding-right: 8px;
     padding-left: 9px;
     font-size: 10px;
+  }
+
+  #root .tab-page-content {
+    padding: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }
