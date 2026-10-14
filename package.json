@@ -106,17 +106,16 @@
     },
     "nsis": {
       "artifactName": "${productName}-${version}-setup.exe",
+      "installerIcon": "electron/icon.ico",
+      "uninstallerIcon": "electron/icon.ico",
+      "installerHeaderIcon": "electron/icon.ico",
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Minecraft Texture Editor",
-      "uninstallDisplayName": "Minecraft Texture Editor",
-      "runAfterFinish": true,
-      "allowElevation": true,
       "perMachine": false
     },
-
     "portable": {
       "artifactName": "${productName}-${version}-portable.exe"
     }
