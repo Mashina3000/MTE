@@ -1316,6 +1316,130 @@ html[data-app-theme='light'] .border-gray-600 {
   border-color: var(--app-border) !important;
 }
 
+#root [class~='bg-gray-950'],
+#root [class~='bg-gray-900'] {
+  background-image:
+    linear-gradient(90deg, #ffffff06 1px, transparent 1px),
+    linear-gradient(#00000009 1px, transparent 1px);
+  background-size: 8px 8px;
+}
+
+#root [class~='bg-gray-800'],
+#root [class~='bg-gray-700'] {
+  background-image:
+    linear-gradient(90deg, #ffffff08 1px, transparent 1px),
+    linear-gradient(#00000008 1px, transparent 1px);
+  background-size: 6px 6px;
+}
+
+#root .tab-page-content {
+  background-color: var(--app-bg);
+  background-image:
+    linear-gradient(45deg, color-mix(in srgb, var(--app-panel) 36%, transparent) 25%, transparent 25%),
+    linear-gradient(-45deg, color-mix(in srgb, var(--app-panel) 36%, transparent) 25%, transparent 25%);
+  background-position: 0 0, 6px 6px;
+  background-size: 12px 12px;
+}
+
+#root .tab-page-content section[class*='rounded'] {
+  position: relative;
+  border: 2px solid var(--app-border) !important;
+  border-radius: 2px !important;
+  background-color: var(--app-panel) !important;
+  background-image: linear-gradient(var(--app-grass), var(--app-grass)) !important;
+  background-repeat: no-repeat !important;
+  background-size: 100% 4px !important;
+  box-shadow: inset 2px 2px #ffffff0b, inset -2px -2px #0003, 0 3px 0 #0003;
+}
+
+#root .tab-page-content section[class*='rounded']::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 5px;
+  background-color: var(--app-grass);
+  background-image:
+    linear-gradient(90deg, transparent 50%, #ffffff19 50%),
+    linear-gradient(#ffffff19 50%, transparent 50%);
+  background-size: 6px 6px;
+  content: '';
+  pointer-events: none;
+}
+
+#root .tab-page-content div[class*='rounded'][class*='border'] {
+  border-radius: 2px !important;
+  border-color: color-mix(in srgb, var(--app-stone) 46%, var(--app-border)) !important;
+  background-image:
+    linear-gradient(90deg, #ffffff08 1px, transparent 1px),
+    linear-gradient(#00000008 1px, transparent 1px);
+  background-size: 6px 6px;
+  box-shadow: inset 1px 1px #ffffff0a, inset -1px -1px #0002, 0 2px 0 #0002;
+}
+
+#root .tab-page-content [class*='rounded-lg'],
+#root .tab-page-content [class*='rounded-xl'],
+#root .tab-page-content [class*='rounded-md'],
+#root .tab-page-content [class*='rounded-full'] {
+  border-radius: 2px !important;
+}
+
+#root .tab-page-content button:not(.app-tab):not(.texture-tool-button):not(.texture-palette-swatch) {
+  border-radius: 2px;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, transform 120ms ease;
+}
+
+#root .tab-page-content button:focus-visible,
+#root .app-tabs button:focus-visible {
+  outline: 2px solid var(--app-gold);
+  outline-offset: 2px;
+}
+
+#root .tab-page-content button[class*='bg-blue-'],
+#root .tab-page-content button[class*='bg-green-'] {
+  border: 1px solid color-mix(in srgb, var(--app-accent) 70%, #fff);
+  box-shadow: inset 2px 2px #ffffff2b, inset -2px -2px #0004, 0 2px 0 #0004;
+  text-shadow: 1px 1px #0005;
+}
+
+#root .tab-page-content button[class*='bg-blue-']:hover,
+#root .tab-page-content button[class*='bg-green-']:hover {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+
+#root .tab-page-content button[class*='border-gray-'] {
+  border-color: var(--app-border);
+  box-shadow: inset 1px 1px #ffffff0b, inset -1px -1px #0002;
+}
+
+#root .tab-page-content h1,
+#root .tab-page-content h2,
+#root .tab-page-content h3 {
+  text-shadow: 1px 1px #0002;
+}
+
+#root .tab-page-content input:not([type='range']):not([type='checkbox']):not([type='color']),
+#root .tab-page-content textarea,
+#root .tab-page-content select {
+  border-radius: 2px;
+  border-color: var(--app-border);
+  background-color: var(--app-panel-raised);
+  color: var(--app-text);
+}
+
+#root .tab-page-content input:focus,
+#root .tab-page-content textarea:focus,
+#root .tab-page-content select:focus {
+  outline: 2px solid color-mix(in srgb, var(--app-accent) 65%, transparent);
+  outline-offset: 1px;
+}
+
+#root .tab-page-content input[type='checkbox'],
+#root .tab-page-content input[type='range'] {
+  accent-color: var(--app-accent);
+}
+
 #root [class~='bg-blue-600'] {
   background-color: var(--app-grass) !important;
   box-shadow: inset 2px 2px #ffffff2b, inset -2px -2px #0003;
@@ -1347,4 +1471,29 @@ html[data-app-theme='light'] .border-gray-600 {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--app-dirt);
+}
+
+@media (max-width: 760px) {
+  .app-shell-header {
+    min-height: 58px;
+    padding: 0 12px;
+  }
+
+  .app-shortcut-hint,
+  .app-version-badge {
+    display: none;
+  }
+
+  .app-tabs {
+    gap: 5px;
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+
+  .app-tab {
+    min-height: 35px;
+    padding-right: 8px;
+    padding-left: 9px;
+    font-size: 10px;
+  }
 }
