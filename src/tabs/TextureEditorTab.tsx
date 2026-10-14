@@ -252,65 +252,86 @@ export const TextureEditorTab: React.FC = () => {
   return (
     <TabLayout label={t('tabs.editor')} id={0} icon={<Palette size={18} />}>
       <div className="texture-workspace">
-        <aside className="texture-panel texture-tools">
-          <div className="texture-panel-heading">
-            <span className="texture-panel-icon"><Palette size={16} /></span>
-            <div>
-              <h3>Инструменты</h3>
-              <p>Холст и кисть</p>
-            </div>
-          </div>
-
-          <label className="texture-field-label" htmlFor="texture-tool">Инструмент</label>
-          <select
-            id="texture-tool"
-            value={currentTool}
-            onChange={(event) => setCurrentTool(event.target.value)}
-            className="texture-select"
-          >
-            <option value="brush">{t('tools.brush')}</option>
-            <option value="eraser">{t('tools.eraser')}</option>
-            <option value="fill">{t('tools.fill')}</option>
-            <option value="eyedropper">{t('tools.eyedropper')}</option>
-          </select>
-
-          <div className="texture-control">
-            <label className="texture-field-label" htmlFor="brush-size">Размер кисти <span>{brushSize}px</span></label>
-            <input id="brush-size" type="range" min="1" max="64" value={brushSize} onChange={(event) => setBrushSize(Number(event.target.value))} />
-          </div>
-          <div className="texture-control">
-            <label className="texture-field-label" htmlFor="brush-hardness">Жёсткость <span>{brushHardness}%</span></label>
-            <input id="brush-hardness" type="range" min="1" max="100" value={brushHardness} onChange={(event) => setBrushHardness(Number(event.target.value))} />
-          </div>
-
-          <div>
-            <span className="texture-field-label">Форма кисти</span>
-            <div className="texture-shape-options">
-              {(['square', 'circle', 'diamond'] as const).map((shape) => (
+        <section className="texture-ribbon" aria-label="Панель инструментов">
+          <div className="texture-ribbon-group texture-ribbon-tools">
+            <span className="texture-ribbon-caption">Инструменты</span>
+            <div className="texture-tool-buttons">
+              {[
+                { id: 'brush', label: 'Кисть', icon: <Palette size={17} /> },
+                { id: 'eraser', label: 'Ластик', icon: <Eraser size={17} /> },
+                { id: 'fill', label: 'Заливка', icon: <Plus size={17} /> },
+                { id: 'eyedropper', label: 'Пипетка', icon: <Eye size={17} /> },
+              ].map((tool) => (
                 <button
-                  key={shape}
+                  key={tool.id}
                   type="button"
-                  onClick={() => setBrushShape(shape)}
-                  className={`texture-shape-button ${brushShape === shape ? 'is-selected' : ''}`}
-                  aria-pressed={brushShape === shape}
+                  className={`texture-tool-button ${currentTool === tool.id ? 'is-selected' : ''}`}
+                  onClick={() => setCurrentTool(tool.id)}
+                  aria-pressed={currentTool === tool.id}
+                  title={tool.label}
                 >
-                  {shape === 'square' ? 'Квадрат' : shape === 'circle' ? 'Круг' : 'Ромб'}
+                  {tool.icon}
+                  <span>{tool.label}</span>
                 </button>
               ))}
             </div>
           </div>
 
-          <div className="texture-control">
-            <label className="texture-field-label" htmlFor="texture-color">Цвет кисти</label>
-            <div className="texture-color-control">
-              <input id="texture-color" type="color" value={selectedColor} onChange={(event) => setSelectedColor(event.target.value)} />
-              <span>{selectedColor.toUpperCase()}</span>
+          <div className="texture-ribbon-group texture-ribbon-brush">
+            <span className="texture-ribbon-caption">Кисть</span>
+            <label className="texture-ribbon-range">
+              <span>Размер <b>{brushSize}px</b></span>
+              <input type="range" min="1" max="64" value={brushSize} onChange={(event) => setBrushSize(Number(event.target.value))} aria-label="Размер кисти" />
+            </label>
+            <label className="texture-ribbon-range">
+              <span>Жёсткость <b>{brushHardness}%</b></span>
+              <input type="range" min="1" max="100" value={brushHardness} onChange={(event) => setBrushHardness(Number(event.target.value))} aria-label="Жёсткость кисти" />
+            </label>
+            <div className="texture-brush-shapes" aria-label="Форма кисти">
+              {(['square', 'circle', 'diamond'] as const).map((shape) => (
+                <button
+                  key={shape}
+                  type="button"
+                  onClick={() => setBrushShape(shape)}
+                  className={`texture-brush-shape ${brushShape === shape ? 'is-selected' : ''}`}
+                  aria-label={shape === 'square' ? 'Квадратная кисть' : shape === 'circle' ? 'Круглая кисть' : 'Кисть ромб'}
+                  aria-pressed={brushShape === shape}
+                >
+                  <i className={`texture-shape-preview shape-${shape}`} />
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="texture-separator" />
-          <div>
-            <span className="texture-field-label">Размер текстуры</span>
+          <div className="texture-ribbon-group texture-ribbon-colors">
+            <span className="texture-ribbon-caption">Цвета</span>
+            <div className="texture-color-palette">
+              {[
+                '#172014', '#ffffff', '#777777', '#c4c4c4',
+                '#812e25', '#ea4b36', '#ef922e', '#f3d547',
+                '#69ad3b', '#2c7135', '#44c5a0', '#3785d0',
+                '#393d9b', '#914bc1', '#d96aa9', '#8a5a36',
+              ].map((color) => (
+                <button
+                  key={color}
+                  type="button"
+                  className={`texture-palette-swatch ${selectedColor.toLowerCase() === color ? 'is-selected' : ''}`}
+                  style={{ backgroundColor: color }}
+                  onClick={() => setSelectedColor(color)}
+                  title={color}
+                  aria-label={`Выбрать цвет ${color}`}
+                />
+              ))}
+              <label className="texture-custom-color" title="Другой цвет">
+                <input type="color" value={selectedColor} onChange={(event) => setSelectedColor(event.target.value)} aria-label="Выбрать свой цвет" />
+                <Palette size={15} />
+              </label>
+            </div>
+            <span className="texture-current-color">{selectedColor.toUpperCase()}</span>
+          </div>
+
+          <div className="texture-ribbon-group texture-ribbon-document">
+            <span className="texture-ribbon-caption">Холст</span>
             <div className="texture-size-options">
               {[16, 32, 64, 128, 256, 512].map((size) => (
                 <button
@@ -323,9 +344,17 @@ export const TextureEditorTab: React.FC = () => {
                 </button>
               ))}
             </div>
+            <label className="texture-ribbon-import">
+              <Upload size={15} />
+              <span>Импорт</span>
+              <input type="file" accept="image/png,image/jpeg,image/webp" onChange={importImage} />
+            </label>
+            <button type="button" className="texture-ribbon-export" onClick={exportAsPNG}>
+              <Download size={15} />
+              <span>Экспорт PNG</span>
+            </button>
           </div>
-          <p className="texture-hint"><Eraser size={14} /> PNG сохраняется с прозрачностью</p>
-        </aside>
+        </section>
 
         <section className="texture-canvas-panel">
           <div className="texture-canvas-toolbar">
@@ -437,16 +466,7 @@ export const TextureEditorTab: React.FC = () => {
               </div>
             ))}
           </div>
-          <div className="texture-layer-bottom">
-            <label className="texture-secondary-action">
-              <Upload size={15} />
-              Импорт PNG
-              <input type="file" accept="image/png,image/jpeg,image/webp" onChange={importImage} />
-            </label>
-            <button type="button" className="texture-export-button" onClick={exportAsPNG}>
-              <Download size={16} /> Экспорт PNG
-            </button>
-          </div>
+          <p className="texture-hint"><Eraser size={14} /> PNG сохраняется с прозрачностью</p>
         </aside>
       </div>
     </TabLayout>
