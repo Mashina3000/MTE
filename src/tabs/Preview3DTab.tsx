@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { ContactShadows, Environment, Float, OrbitControls } from '@react-three/drei';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
+import { ContactShadows, Float, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { TabLayout } from '@/components/TabLayout';
 import { Box, Camera, Sparkles, Download, RotateCcw } from 'lucide-react';
@@ -68,16 +68,47 @@ const LIGHTING_PRESETS: Record<LightingPreset, { ambient: number; directional: n
 const MODEL_TYPES: ModelType[] = ['block', 'item', 'mob', 'skin', 'armor', 'tool'];
 const POSES: PoseName[] = ['standing', 'walking', 'running', 'sitting', 'floating', 'riding'];
 
-function CameraRig({ preset }: { preset: CameraPreset }) {
+function CameraRig({ preset, fov }: { preset: CameraPreset; fov: number }) {
   const { camera } = useThree();
 
-  useFrame(() => {
+  useEffect(() => {
     const config = CAMERA_PRESETS[preset];
-    camera.position.lerp(new THREE.Vector3(...config.position), 0.06);
+    camera.position.set(...config.position);
     camera.lookAt(config.target[0], config.target[1], config.target[2]);
-  });
+    if (camera instanceof THREE.PerspectiveCamera) {
+      camera.fov = fov;
+      camera.updateProjectionMatrix();
+    }
+  }, [camera, fov, preset]);
 
   return null;
+}
+
+class PreviewCanvasBoundary extends React.Component<
+  React.PropsWithChildren<{ onRetry: () => void }>,
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error) {
+    console.error('3D preview failed to render', error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="preview3d-recovery" role="alert">
+          <p>Не удалось запустить 3D-просмотр.</p>
+          <button type="button" onClick={this.props.onRetry}>Перезапустить просмотр</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
 }
 
 function PreviewModel({ modelType, pose, skinTone }: { modelType: ModelType; pose: PoseName; skinTone: string }) {
@@ -241,8 +272,15 @@ function Scene({
       />
       <pointLight position={[-3, 2, -2]} intensity={0.8} color="#92c5ff" />
 
-      <CameraRig preset={preset} />
-      <OrbitControls enablePan enableZoom enableRotate minDistance={2} maxDistance={12} />
+      <CameraRig preset={preset} fov={fov} />
+      <OrbitControls
+        target={CAMERA_PRESETS[preset].target}
+        enablePan
+        enableZoom
+        enableRotate
+        minDistance={2}
+        maxDistance={12}
+      />
 
       <Float speed={1.4} rotationIntensity={0.8} floatIntensity={0.6}>
         <group rotation={[0, rotation, 0]}>
@@ -264,7 +302,6 @@ function Scene({
           </mesh>
         </group>
       )}
-      {environment === 'hdr' && <Environment preset="city" />}
       {environment === 'image' && (
         <mesh position={[0, 0, -6]}>
           <planeGeometry args={[18, 10]} />
@@ -284,8 +321,38 @@ export const Preview3DTab: React.FC = () => {
   const [fov, setFov] = useState(42);
   const [rotation, setRotation] = useState(0.4);
   const [skinTone, setSkinTone] = useState('#d8b28c');
+  const [canvasGeneration, setCanvasGeneration] = useState(0);
+  const [renderer, setRenderer] = useState<THREE.WebGLRenderer | null>(null);
+  const [graphicsError, setGraphicsError] = useState<string | null>(null);
 
   const contextLabel = CONTEXTS.find((ctx) => ctx.id === selectedContext)?.label ?? 'Isometric';
+
+  useEffect(() => {
+    if (!renderer) return;
+
+    const canvas = renderer.domElement;
+    const handleContextLost = (event: Event) => {
+      event.preventDefault();
+      setGraphicsError('Графический контекст потерян. Перезапустите только 3D-просмотр.');
+    };
+    const handleContextRestored = () => {
+      setGraphicsError(null);
+      setCanvasGeneration((generation) => generation + 1);
+    };
+
+    canvas.addEventListener('webglcontextlost', handleContextLost);
+    canvas.addEventListener('webglcontextrestored', handleContextRestored);
+    return () => {
+      canvas.removeEventListener('webglcontextlost', handleContextLost);
+      canvas.removeEventListener('webglcontextrestored', handleContextRestored);
+    };
+  }, [renderer]);
+
+  const recoverPreview = () => {
+    setGraphicsError(null);
+    setRenderer(null);
+    setCanvasGeneration((generation) => generation + 1);
+  };
 
   const exportPreview = () => {
     const blob = new Blob([`Minecraft preview export\nContext: ${contextLabel}\nModel: ${modelType}\nPose: ${pose}`], {
@@ -303,8 +370,8 @@ export const Preview3DTab: React.FC = () => {
 
   return (
     <TabLayout label="3D Preview" id={3} icon={<Box />}>
-      <div className="flex h-full gap-4">
-        <aside className="w-72 bg-gray-900 rounded border border-gray-700 p-3 overflow-y-auto">
+      <div className="preview3d-layout">
+        <aside className="preview3d-contexts bg-gray-900 rounded border border-gray-700 p-3 overflow-y-auto">
           <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-200">
             <Camera size={16} />
             Contexts
@@ -327,7 +394,7 @@ export const Preview3DTab: React.FC = () => {
           </div>
         </aside>
 
-        <div className="flex-1 flex flex-col gap-4">
+        <div className="preview3d-main">
           <div className="flex items-center justify-between rounded border border-gray-700 bg-gray-900 px-4 py-3">
             <div className="flex items-center gap-2 text-sm text-gray-200">
               <Sparkles size={16} className="text-blue-400" />
@@ -350,23 +417,36 @@ export const Preview3DTab: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex-1 overflow-hidden rounded border border-gray-700 bg-black">
-            <Canvas
-              shadows
-              camera={{ position: CAMERA_PRESETS[selectedContext].position, fov }}
-              gl={{ antialias: true }}
-            >
-              <Scene
-                preset={selectedContext}
-                modelType={modelType}
-                pose={pose}
-                lighting={lighting}
-                environment={environment}
-                fov={fov}
-                rotation={rotation}
-                skinTone={skinTone}
-              />
-            </Canvas>
+          <div className="preview3d-viewport rounded border border-gray-700 bg-black">
+            <PreviewCanvasBoundary key={canvasGeneration} onRetry={recoverPreview}>
+              <Canvas
+                key={canvasGeneration}
+                shadows
+                camera={{ position: CAMERA_PRESETS[selectedContext].position, fov }}
+                gl={{ antialias: true }}
+                onCreated={({ gl }) => {
+                  setRenderer(gl);
+                  setGraphicsError(null);
+                }}
+              >
+                <Scene
+                  preset={selectedContext}
+                  modelType={modelType}
+                  pose={pose}
+                  lighting={lighting}
+                  environment={environment}
+                  fov={fov}
+                  rotation={rotation}
+                  skinTone={skinTone}
+                />
+              </Canvas>
+            </PreviewCanvasBoundary>
+            {graphicsError && (
+              <div className="preview3d-recovery" role="alert">
+                <p>{graphicsError}</p>
+                <button type="button" onClick={recoverPreview}>Перезапустить просмотр</button>
+              </div>
+            )}
           </div>
         </div>
 
