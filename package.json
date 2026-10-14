@@ -111,8 +111,12 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Minecraft Texture Editor",
+      "uninstallDisplayName": "Minecraft Texture Editor",
+      "runAfterFinish": true,
+      "allowElevation": true,
       "perMachine": false
     },
+
     "portable": {
       "artifactName": "${productName}-${version}-portable.exe"
     }
