@@ -79,6 +79,7 @@
     "files": [
       "dist/**/*",
       "dist-electron/**/*",
+      "electron/icon.ico",
       "package.json"
     ],
     "extraMetadata": {

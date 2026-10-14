@@ -11,6 +11,7 @@ const createWindow = () => {
     height: 900,
     minWidth: 1200,
     minHeight: 700,
+    icon: path.join(__dirname, '../electron/icon.ico'),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
