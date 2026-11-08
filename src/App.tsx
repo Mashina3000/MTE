@@ -1,5 +1,8 @@
 import React, { useEffect } from 'react';
 import { useStore } from '@/store';
+import grassBlockLogo from '../assets/split/grass-block-logo.png';
+import neonHeaderScene from '../assets/split/neon-header-scene.png';
+import neonCrystalBorder from '../assets/split/neon-crystal-border.png';
 import { TextureEditorTab } from '@/tabs/TextureEditorTab';
 import { AnimationEditorTab } from '@/tabs/AnimationEditorTab';
 import { ResourcePackBuilderTab } from '@/tabs/ResourcePackBuilderTab';
@@ -160,9 +163,16 @@ export const App: React.FC = () => {
 
   return (
     <div className="app-shell flex flex-col w-screen h-screen">
-      <header className="app-shell-header flex items-center justify-between">
+      <header
+        className="app-shell-header flex items-center justify-between"
+        style={{
+          backgroundImage: `linear-gradient(90deg, var(--app-panel) 0%, #06162b44 30%, #06162b44 70%, var(--app-panel) 100%), url("${neonHeaderScene}")`,
+        }}
+      >
         <div className="flex items-center gap-3">
-          <div className="app-brand-mark"><Package size={20} /></div>
+          <div className="app-brand-mark">
+            <img className="app-brand-image" src={grassBlockLogo} alt="" />
+          </div>
           <div>
             <h1 className="app-brand-title">Minecraft Texture Editor</h1>
             <p className="app-brand-subtitle">PIXEL ART WORKSPACE</p>
@@ -201,7 +211,12 @@ export const App: React.FC = () => {
       </main>
 
       {/* Статус бар */}
-      <footer className="app-shell-footer flex items-center justify-between">
+      <footer
+        className="app-shell-footer flex items-center justify-between"
+        style={{
+          backgroundImage: `linear-gradient(0deg, color-mix(in srgb, var(--app-panel) 72%, transparent), color-mix(in srgb, var(--app-panel) 72%, transparent)), url("${neonCrystalBorder}")`,
+        }}
+      >
         <div><i className="texture-status-dot" /> Готово</div>
         <div>
           Current Tab: {currentTab?.label} ({activeTab + 1}/{tabs.length})

@@ -25,57 +25,57 @@ body {
 
 :root {
   color-scheme: dark;
-  --app-bg: #17130f;
-  --app-panel: #28221b;
-  --app-panel-raised: #352c22;
-  --app-panel-hover: #46392a;
-  --app-border: #584531;
-  --app-text: #f1e8d5;
-  --app-muted: #b8a98c;
-  --app-accent: #77c442;
-  --app-accent-strong: #4d8d2b;
-  --app-canvas: #201d18;
-  --app-grass: #4f8c35;
-  --app-dirt: #79502f;
-  --app-stone: #77736d;
-  --app-gold: #e3b341;
+  --app-bg: #030817;
+  --app-panel: #07152a;
+  --app-panel-raised: #0a2140;
+  --app-panel-hover: #103459;
+  --app-border: #13557a;
+  --app-text: #e5f7ff;
+  --app-muted: #83a9c5;
+  --app-accent: #21d8ff;
+  --app-accent-strong: #00bd79;
+  --app-canvas: #071325;
+  --app-grass: #00d58d;
+  --app-dirt: #6b35dd;
+  --app-stone: #1478a5;
+  --app-gold: #ffb84d;
 }
 
 html[data-app-theme='light'] {
   color-scheme: light;
-  --app-bg: #e6dfcc;
-  --app-panel: #f3ecd9;
-  --app-panel-raised: #e4dac1;
-  --app-panel-hover: #d4c7a8;
-  --app-border: #aa956d;
-  --app-text: #2c251b;
-  --app-muted: #685b45;
-  --app-accent: #4e8b2e;
-  --app-accent-strong: #3e7025;
-  --app-canvas: #d4cbb5;
-  --app-grass: #579238;
-  --app-dirt: #91643c;
-  --app-stone: #858078;
-  --app-gold: #aa771e;
+  --app-bg: #e5f1f8;
+  --app-panel: #f4faff;
+  --app-panel-raised: #dbeefa;
+  --app-panel-hover: #c9e4f5;
+  --app-border: #7aaac7;
+  --app-text: #102b42;
+  --app-muted: #496d87;
+  --app-accent: #007ca8;
+  --app-accent-strong: #008b60;
+  --app-canvas: #d3e6f0;
+  --app-grass: #008b60;
+  --app-dirt: #6838bd;
+  --app-stone: #28799c;
+  --app-gold: #a45a00;
 }
 
 @media (prefers-color-scheme: light) {
   html[data-app-theme='auto'] {
     color-scheme: light;
-    --app-bg: #e6dfcc;
-    --app-panel: #f3ecd9;
-    --app-panel-raised: #e4dac1;
-    --app-panel-hover: #d4c7a8;
-    --app-border: #aa956d;
-    --app-text: #2c251b;
-    --app-muted: #685b45;
-    --app-accent: #4e8b2e;
-    --app-accent-strong: #3e7025;
-    --app-canvas: #d4cbb5;
-    --app-grass: #579238;
-    --app-dirt: #91643c;
-    --app-stone: #858078;
-    --app-gold: #aa771e;
+    --app-bg: #e5f1f8;
+    --app-panel: #f4faff;
+    --app-panel-raised: #dbeefa;
+    --app-panel-hover: #c9e4f5;
+    --app-border: #7aaac7;
+    --app-text: #102b42;
+    --app-muted: #496d87;
+    --app-accent: #007ca8;
+    --app-accent-strong: #008b60;
+    --app-canvas: #d3e6f0;
+    --app-grass: #008b60;
+    --app-dirt: #6838bd;
+    --app-stone: #28799c;
+    --app-gold: #a45a00;
   }
 }
 
@@ -1655,5 +1655,207 @@ html[data-app-theme='light'] .border-gray-600 {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+  }
+}
+
+/* Neon styling uses the split logo and scene crops from the supplied mockup. */
+.app-shell {
+  background-color: var(--app-bg);
+  background-image:
+    radial-gradient(ellipse at 50% -25%, color-mix(in srgb, var(--app-accent) 15%, transparent), transparent 58%),
+    linear-gradient(135deg, color-mix(in srgb, var(--app-dirt) 5%, transparent) 25%, transparent 25%);
+  background-size: auto, 12px 12px;
+}
+
+.app-shell-header {
+  border-bottom-color: color-mix(in srgb, var(--app-accent) 52%, var(--app-border));
+  background-position: center, center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%, auto 100%;
+  box-shadow: 0 3px 18px color-mix(in srgb, var(--app-accent) 16%, transparent);
+}
+
+.app-brand-mark {
+  width: 48px;
+  height: 48px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--app-accent) 72%, #fff);
+  border-radius: 9px;
+  background: #04152a;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--app-accent) 38%, transparent);
+}
+
+.app-brand-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.app-brand-title {
+  color: var(--app-text);
+  text-shadow: 0 0 12px #00bfff75, 0 2px 3px #000b;
+}
+
+.app-brand-subtitle {
+  color: var(--app-muted);
+}
+
+.app-version-badge {
+  border-color: color-mix(in srgb, var(--app-accent) 60%, var(--app-border));
+  color: var(--app-accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--app-accent) 18%, transparent);
+}
+
+.app-tabs {
+  border-bottom-color: var(--app-border);
+  background:
+    linear-gradient(90deg, #21d8ff0a 1px, transparent 1px) 0 0 / 8px 8px,
+    linear-gradient(180deg, #07152a, #050d1c);
+  box-shadow: inset 0 -1px color-mix(in srgb, var(--app-accent) 24%, transparent);
+}
+
+#root .app-tab {
+  --tab-accent: #21d8ff;
+  min-height: 39px;
+  border: 1px solid color-mix(in srgb, var(--tab-accent) 42%, #10304c);
+  border-radius: 7px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tab-accent) 14%, #0a1a31), #071326);
+  box-shadow: inset 0 1px #ffffff12, 0 0 8px color-mix(in srgb, var(--tab-accent) 12%, transparent);
+  color: color-mix(in srgb, var(--tab-accent) 28%, #e5f7ff);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--tab-accent) 55%, transparent);
+}
+
+#root .app-tab:nth-child(4n + 1) {
+  --tab-accent: #00ed9a;
+}
+
+#root .app-tab:nth-child(4n + 2) {
+  --tab-accent: #19baff;
+}
+
+#root .app-tab:nth-child(4n + 3) {
+  --tab-accent: #ff9a37;
+}
+
+#root .app-tab:nth-child(4n) {
+  --tab-accent: #d65bff;
+}
+
+#root .app-tab::before,
+#root .app-tab::after {
+  display: none;
+}
+
+#root .app-tab:hover {
+  border-color: var(--tab-accent);
+  background: color-mix(in srgb, var(--tab-accent) 18%, #071326);
+  color: #fff;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--tab-accent) 34%, transparent);
+  filter: none;
+}
+
+#root .app-tab-active,
+#root .app-tab-active:hover {
+  border-color: var(--tab-accent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tab-accent) 28%, #092342), #071326);
+  color: #fff;
+  box-shadow: inset 0 1px #ffffff24, 0 0 17px color-mix(in srgb, var(--tab-accent) 42%, transparent);
+  transform: none;
+}
+
+.tab-page-heading {
+  border-bottom-color: var(--app-border);
+  background:
+    linear-gradient(90deg, var(--app-accent) 0 4px, transparent 4px),
+    var(--app-panel);
+  box-shadow: 0 4px 16px #0003;
+}
+
+.texture-panel,
+.texture-canvas-panel {
+  border-color: color-mix(in srgb, var(--app-accent) 28%, var(--app-border));
+  border-radius: 7px;
+  box-shadow: inset 0 1px #ffffff0a, 0 0 16px color-mix(in srgb, var(--app-accent) 8%, transparent);
+}
+
+.texture-panel-heading {
+  border-bottom-color: color-mix(in srgb, var(--app-accent) 24%, var(--app-border));
+}
+
+.texture-panel-icon {
+  border: 1px solid color-mix(in srgb, var(--app-accent) 42%, transparent);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--app-accent) 15%, var(--app-panel));
+  color: var(--app-accent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--app-accent) 16%, transparent);
+}
+
+.texture-canvas-frame {
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--app-accent) 70%, var(--app-border)),
+    0 0 20px color-mix(in srgb, var(--app-accent) 28%, transparent),
+    0 10px 30px #0008;
+}
+
+.app-shell-footer {
+  border-top-color: color-mix(in srgb, var(--app-dirt) 58%, var(--app-border));
+  background-position: center, center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%, 100% 30px;
+  text-shadow: 0 1px 3px #000;
+}
+
+#root .tab-page-content section[class*='rounded'] {
+  border: 1px solid color-mix(in srgb, var(--app-accent) 34%, var(--app-border)) !important;
+  border-radius: 8px !important;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--app-accent) 5%, var(--app-panel)), var(--app-panel)) !important;
+  box-shadow:
+    inset 0 1px #ffffff0b,
+    0 0 15px color-mix(in srgb, var(--app-accent) 10%, transparent) !important;
+}
+
+#root .tab-page-content section[class*='rounded']::before {
+  right: 9px;
+  left: 9px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--app-accent), var(--app-dirt), transparent);
+  opacity: 0.85;
+}
+
+#root .tab-page-content div[class*='rounded'][class*='border'] {
+  border-color: color-mix(in srgb, var(--app-accent) 24%, var(--app-border)) !important;
+  border-radius: 6px !important;
+  background-image: linear-gradient(90deg, #ffffff05 1px, transparent 1px);
+  box-shadow: inset 0 1px #ffffff09, 0 0 10px #0002;
+}
+
+#root .tab-page-content [class*='rounded-lg'],
+#root .tab-page-content [class*='rounded-xl'],
+#root .tab-page-content [class*='rounded-md'],
+#root .tab-page-content [class*='rounded-full'] {
+  border-radius: 6px !important;
+}
+
+#root .tab-page-content button:not(.app-tab):not(.texture-tool-button):not(.texture-palette-swatch) {
+  border-radius: 5px;
+}
+
+#root button:focus-visible,
+#root select:focus-visible,
+#root input:focus-visible,
+#root textarea:focus-visible {
+  outline-color: var(--app-accent);
+}
+
+@media (max-width: 760px) {
+  .app-shell-header {
+    background-size: 100% 100%, auto 100%;
+  }
+
+  .app-brand-mark {
+    width: 40px;
+    height: 40px;
   }
 }
