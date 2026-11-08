@@ -13,14 +13,22 @@ type CameraPreset =
   | 'first-person'
   | 'third-person'
   | 'inventory'
-  | 'drop';
+  | 'drop'
+  | 'helmet'
+  | 'chest'
+  | 'leggings'
+  | 'boots'
+  | 'elytra'
+  | 'block-world'
+  | 'block-floor'
+  | 'hotbar';
 
 type ModelType = 'block' | 'item' | 'mob' | 'skin' | 'armor' | 'tool';
 type PoseName = 'standing' | 'walking' | 'running' | 'sitting' | 'floating' | 'riding';
 type LightingPreset = 'day' | 'night' | 'nether' | 'end' | 'cave' | 'underwater' | 'space';
 
 type ContextOption = {
-  id: string;
+  id: CameraPreset;
   label: string;
   description: string;
 };
@@ -53,6 +61,14 @@ const CAMERA_PRESETS: Record<CameraPreset, { position: [number, number, number];
   'third-person': { position: [3.5, 1.8, 3.5], target: [0, 1, 0] },
   inventory: { position: [0, 0.1, 4.5], target: [0, 0.1, 0] },
   drop: { position: [0, 1.8, 5], target: [0, 0.6, 0] },
+  helmet: { position: [0, 2.8, 5], target: [0, 2.2, 0] },
+  chest: { position: [0, 1.8, 5], target: [0, 1.2, 0] },
+  leggings: { position: [0, 0.8, 5], target: [0, 0.3, 0] },
+  boots: { position: [0, -0.5, 5], target: [0, -0.8, 0] },
+  elytra: { position: [0, 1.4, -5], target: [0, 1.2, 0] },
+  'block-world': { position: [4, 2.5, 5], target: [0, 0.6, 0] },
+  'block-floor': { position: [0, 1.2, 5], target: [0, 0, 0] },
+  hotbar: { position: [0, 1.4, 6], target: [0, 0.6, 0] },
 };
 
 const LIGHTING_PRESETS: Record<LightingPreset, { ambient: number; directional: number; color: string }> = {
@@ -380,7 +396,7 @@ export const Preview3DTab: React.FC = () => {
             {CONTEXTS.map((item) => (
               <button
                 key={item.id}
-                onClick={() => setSelectedContext(item.id as CameraPreset)}
+                onClick={() => setSelectedContext(item.id)}
                 className={`w-full text-left rounded border p-2 transition ${
                   selectedContext === item.id
                     ? 'border-blue-500 bg-blue-600/20'
